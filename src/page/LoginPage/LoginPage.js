@@ -17,10 +17,10 @@ const Login = () => {
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    if (loginError) {
+    return () => {
       dispatch(clearErrors());
-    }
-  }, [navigate]);
+    };
+  }, [dispatch]);
   const handleLoginWithEmail = (event) => {
     event.preventDefault();
     dispatch(loginWithEmail({ email, password }));
