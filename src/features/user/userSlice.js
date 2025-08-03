@@ -99,6 +99,12 @@ const userSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.loginError = null;
+
+        // 토큰 저장
+        sessionStorage.setItem("token", action.payload.token);
+
+        api.defaults.headers["authorization"] =
+          "Bearer " + action.payload.token;
       })
       .addCase(loginWithEmail.rejected, (state, action) => {
         state.loading = false;
