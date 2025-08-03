@@ -13,7 +13,7 @@ export const loginWithEmail = createAsyncThunk(
       return response.data;
     } catch (error) {
       // 실패시 생긴 에러 값 reducer에 저장
-      return rejectWithValue(error.error);
+      return rejectWithValue(error.response.data.error);
     }
   }
 );
