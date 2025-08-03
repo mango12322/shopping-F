@@ -16,7 +16,7 @@ const uiSlice = createSlice({
       };
     },
     hideToastMessage(state) {
-      state.open = false;
+      state.toastMessage = { message: "", status: "" };
     },
   },
 });
