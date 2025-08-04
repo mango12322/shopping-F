@@ -9,7 +9,6 @@ export const loginWithEmail = createAsyncThunk(
   async ({ email, password }, { dispatch, rejectWithValue }) => {
     try {
       const response = await api.post("/auth/login", { email, password });
-
       return response.data;
     } catch (error) {
       dispatch(
@@ -30,7 +29,13 @@ export const loginWithGoogle = createAsyncThunk(
   async (token, { rejectWithValue }) => {}
 );
 
-export const logout = () => (dispatch) => {};
+export const logout = () => (dispatch) => {
+  // 1 sessionStorage에서 토큰 삭제하기?
+  sessionStorage.removeItem("token");
+  // 2 헤더에서 토큰 정보 삭제
+  delete api.defaults.headers["authorization"];
+  dispatch(clearLogout());
+};
 
 export const registerUser = createAsyncThunk(
   "user/registerUser",
@@ -93,6 +98,10 @@ const userSlice = createSlice({
       state.loginError = null;
       state.registrationError = null;
     },
+
+    clearLogout: (state) => {
+      state.user = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -126,9 +135,12 @@ const userSlice = createSlice({
       })
       .addCase(loginWithToken.fulfilled, (state, action) => {
         state.user = action.payload.user;
+      })
+      .addCase(loginWithToken.rejected, (state) => {
+        state.user = null;
       });
   },
 });
 
-export const { clearErrors } = userSlice.actions;
+export const { clearErrors, clearLogout } = userSlice.actions;
 export default userSlice.reducer;
