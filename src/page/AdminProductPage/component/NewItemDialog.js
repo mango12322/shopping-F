@@ -76,10 +76,12 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
       return { ...total, [item[0]]: parseInt(item[1]) };
     }, {});
 
+    const size = stock.map((item) => item[0]);
+
     // [['M',2]] 에서 {M:2}로
     if (mode === "new") {
       //새 상품 만들기
-      dispatch(createProduct({ ...formData, stock: totalStock }));
+      dispatch(createProduct({ ...formData, stock: totalStock, size: size }));
     } else {
       // 상품 수정하기
     }
@@ -111,6 +113,9 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
 
   const handleStockChange = (value, index) => {
     //재고 수량 변환하기
+    const newStock = [...stock];
+    newStock[index][1] = value;
+    setStock(newStock);
   };
 
   const onHandleCategory = (event) => {
