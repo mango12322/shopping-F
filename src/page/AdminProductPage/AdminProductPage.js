@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Container, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import ReactPaginate from "react-paginate";
-
 import SearchBox from "../../common/component/SearchBox";
 import NewItemDialog from "./component/NewItemDialog";
 import ProductTable from "./component/ProductTable";
@@ -14,13 +13,11 @@ import {
 } from "../../features/product/productSlice";
 
 const AdminProductPage = () => {
-  const [query] = useSearchParams();
+  const [query, setQuery] = useSearchParams();
   const dispatch = useDispatch();
   const { productList, totalPageNum } = useSelector((state) => state.product);
   const [showDialog, setShowDialog] = useState(false);
   const [mode, setMode] = useState("new");
-
-  // 검색 조건 상태
   const [searchQuery, setSearchQuery] = useState({
     page: query.get("page") || 1,
     name: query.get("name") || "",
@@ -37,30 +34,21 @@ const AdminProductPage = () => {
     "",
   ];
 
-  // 페이지 진입 또는 검색조건 변경 시 상품 목록 불러오기
   useEffect(() => {
     dispatch(getProductList(searchQuery));
   }, [searchQuery, dispatch]);
 
-  // 아이템 삭제
-  const deleteItem = (id) => {
-    dispatch(deleteProduct(id));
-  };
-
-  // 상품 수정 폼 열기
   const openEditForm = (product) => {
     setMode("edit");
     dispatch(setSelectedProduct(product));
     setShowDialog(true);
   };
 
-  // 새 상품 생성 모달 열기
   const handleClickNewItem = () => {
     setMode("new");
     setShowDialog(true);
   };
 
-  // 페이지네이션 클릭 핸들러
   const handlePageClick = ({ selected }) => {
     setSearchQuery({ ...searchQuery, page: selected + 1 });
   };
@@ -83,7 +71,6 @@ const AdminProductPage = () => {
         <ProductTable
           header={tableHeader}
           data={productList}
-          deleteItem={deleteItem}
           openEditForm={openEditForm}
         />
 
