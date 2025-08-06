@@ -86,7 +86,8 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
   };
 
   const addStock = () => {
-    setStock([...stock, ["", ""]]);
+    //재고타입 추가시 배열에 새 배열 추가
+    setStock([...stock, []]);
   };
 
   const deleteStock = (idx) => {
@@ -101,9 +102,7 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
   };
 
   const handleStockChange = (value, index) => {
-    const newStock = [...stock];
-    newStock[index][1] = value;
-    setStock(newStock);
+    //재고 수량 변환하기
   };
 
   const onHandleCategory = (event) => {
@@ -142,39 +141,9 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
         </div>
       )}
       <Form className="form-container" onSubmit={handleSubmit}>
-        <Row className="mb-3">
-          <Form.Group as={Col} controlId="sku">
-            <Form.Label>Sku</Form.Label>
-            <Form.Control
-              onChange={handleChange}
-              type="string"
-              placeholder="Enter Sku"
-              required
-              value={formData.sku}
-            />
-          </Form.Group>
-          <Form.Group as={Col} controlId="name">
-            <Form.Label>Name</Form.Label>
-            <Form.Control
-              onChange={handleChange}
-              type="string"
-              placeholder="Name"
-              required
-              value={formData.name}
-            />
-          </Form.Group>
-        </Row>
+        <Row className="mb-3">{/* Sku, Name Form.Group ... */}</Row>
         <Form.Group className="mb-3" controlId="description">
-          <Form.Label>Description</Form.Label>
-          <Form.Control
-            type="string"
-            placeholder="Description"
-            as="textarea"
-            onChange={handleChange}
-            rows={3}
-            value={formData.description}
-            required
-          />
+          {/* Description Form.Group ... */}
         </Form.Group>
         <Form.Group className="mb-3" controlId="stock">
           <Form.Label className="mr-1">Stock</Form.Label>
@@ -198,7 +167,6 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
                     <option value="" disabled selected hidden>
                       Please Choose...
                     </option>
-                    {/* ===== 원래 코드로 복원된 부분 ===== */}
                     {SIZE.map((item, index) => (
                       <option
                         inValid={true}
@@ -211,7 +179,6 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
                         {item}
                       </option>
                     ))}
-                    {/* ================================= */}
                   </Form.Select>
                 </Col>
                 <Col sm={6}>
@@ -244,51 +211,12 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
           <img
             id="uploadedimage"
             src={formData.image}
-            alt="uploaded"
-            className={`upload-image mt-2 ${!formData.image ? "hidden" : ""}`}
+            className="upload-image mt-2"
+            alt="uploadedimage"
           />
         </Form.Group>
         <Row className="mb-3">
-          <Form.Group as={Col} controlId="price">
-            <Form.Label>Price</Form.Label>
-            <Form.Control
-              value={formData.price}
-              required
-              onChange={handleChange}
-              type="number"
-              placeholder="0"
-            />
-          </Form.Group>
-          <Form.Group as={Col} controlId="category">
-            <Form.Label>Category</Form.Label>
-            <Form.Control
-              as="select"
-              multiple
-              onChange={onHandleCategory}
-              value={formData.category}
-              required
-            >
-              {CATEGORY.map((item, idx) => (
-                <option key={idx} value={item.toLowerCase()}>
-                  {item}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-          <Form.Group as={Col} controlId="status">
-            <Form.Label>Status</Form.Label>
-            <Form.Select
-              value={formData.status}
-              onChange={handleChange}
-              required
-            >
-              {STATUS.map((item, idx) => (
-                <option key={idx} value={item.toLowerCase()}>
-                  {item}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
+          {/* Price, Category, Status Form.Group ... */}
         </Row>
         {mode === "new" ? (
           <Button variant="primary" type="submit">
