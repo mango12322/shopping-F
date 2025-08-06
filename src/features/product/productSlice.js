@@ -10,7 +10,7 @@ export const getProductList = createAsyncThunk(
       const response = await api.get("/product");
       if (response.status !== 200) throw new Error(response.error);
 
-      return response.data?.data || [];
+      return response.data.data;
     } catch (error) {
       rejectWithValue(error.error);
     }

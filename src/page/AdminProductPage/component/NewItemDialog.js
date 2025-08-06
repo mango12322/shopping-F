@@ -66,23 +66,21 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
   const handleSubmit = (event) => {
     event.preventDefault();
     if (stock.length === 0) return setStockError(true);
+    setStockError(false);
 
     const totalStock = stock.reduce((total, item) => {
       return { ...total, [item[0]]: parseInt(item[1]) };
     }, {});
 
-    const size = stock.map((item) => item[0]);
-
     if (mode === "new") {
-      dispatch(createProduct({ ...formData, stock: totalStock, size: size }));
+      dispatch(createProduct({ ...formData, stock: totalStock }));
     } else {
       // 상품 수정하기
     }
   };
 
   const handleChange = (event) => {
-    const { id, value } = event.target;
-    setFormData({ ...formData, [id]: value });
+    setFormData({ ...formData, [event.target.id]: event.target.value });
   };
 
   const addStock = () => {
