@@ -17,6 +17,18 @@ export const getProductList = createAsyncThunk(
   }
 );
 
+export const getProductDetail = createAsyncThunk(
+  "product/getProductDetail",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/product/${id}`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.error);
+    }
+  }
+);
+
 export const createProduct = createAsyncThunk(
   "product/createProduct",
   async (formData, { dispatch, rejectWithValue }) => {
@@ -88,6 +100,17 @@ const productSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.success = false;
+      })
+      .addCase(getProductDetail.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getProductDetail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedProduct = action.payload;
+      })
+      .addCase(getProductDetail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
