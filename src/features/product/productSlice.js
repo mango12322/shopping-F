@@ -2,74 +2,60 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../utils/api";
 import { showToastMessage } from "../common/uiSlice";
 
-// 비동기 액션 생성
 export const getProductList = createAsyncThunk(
-  "products/getProductList",
-  async (query, { rejectWithValue }) => {
+  "product/getProductList",
+  async (searchQuery, { rejectWithValue }) => {
     try {
-      const response = await api.get("/product");
-      if (response.status !== 200) throw new Error(response.error);
-
-      return response.data.data;
+      const response = await api.get("/product", {
+        params: searchQuery,
+      });
+      return response.data;
     } catch (error) {
-      rejectWithValue(error.error);
+      return rejectWithValue(error.message);
     }
   }
 );
 
-export const getProductDetail = createAsyncThunk(
-  "products/getProductDetail",
-  async (id, { rejectWithValue }) => {}
-);
-
 export const createProduct = createAsyncThunk(
-  "products/createProduct",
+  "product/createProduct",
   async (formData, { dispatch, rejectWithValue }) => {
     try {
-      // 백엔드 호출
       const response = await api.post("/product", formData);
       if (response.status !== 200) {
         throw new Error(response.error);
       }
 
       dispatch(
-        showToastMessage({ message: "상품 생성 완료", status: "success" })
+        showToastMessage({
+          message: "상품 생성에 성공했습니다.",
+          status: "success",
+        })
       );
+
+      dispatch(getProductList({ page: 1 }));
       return response.data.data;
     } catch (error) {
+      dispatch(showToastMessage({ message: error.error, status: "error" }));
       return rejectWithValue(error.error);
     }
   }
 );
 
-export const deleteProduct = createAsyncThunk(
-  "products/deleteProduct",
-  async (id, { dispatch, rejectWithValue }) => {}
-);
-
-export const editProduct = createAsyncThunk(
-  "products/editProduct",
-  async ({ id, ...formData }, { dispatch, rejectWithValue }) => {}
-);
-
-// 슬라이스 생성
 const productSlice = createSlice({
-  name: "products",
+  name: "product",
   initialState: {
     productList: [],
     selectedProduct: null,
     loading: false,
     error: "",
-    totalPageNum: 1,
     success: false,
+    totalPageNum: 1,
   },
   reducers: {
     setSelectedProduct: (state, action) => {
       state.selectedProduct = action.payload;
     },
-    setFilteredList: (state, action) => {
-      state.filteredList = action.payload;
-    },
+    // 모달이 닫힐 때 에러/성공 상태 초기화
     clearError: (state) => {
       state.error = "";
       state.success = false;
@@ -77,34 +63,36 @@ const productSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(createProduct.pending, (state, action) => {
-        state.loading = true;
-      })
-      .addCase(createProduct.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = "";
-        state.success = true;
-      })
-      .addCase(createProduct.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-        state.success = false;
-      })
-      .addCase(getProductList.pending, (state, action) => {
+      // 상품 목록 가져오기
+      .addCase(getProductList.pending, (state) => {
         state.loading = true;
       })
       .addCase(getProductList.fulfilled, (state, action) => {
         state.loading = false;
-        state.productList = action.payload;
-        state.error = "";
+        state.productList = action.payload.data;
+        state.totalPageNum = action.payload.totalPageNum;
       })
       .addCase(getProductList.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // 상품 생성
+      .addCase(createProduct.pending, (state) => {
+        state.loading = true;
+        state.error = "";
+        state.success = false;
+      })
+      .addCase(createProduct.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true; // ✅ 4. 성공 시 success 상태 true로 변경
+      })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload; // ✅ 2. 에러 메시지 저장
+        state.success = false;
       });
   },
 });
 
-export const { setSelectedProduct, setFilteredList, clearError } =
-  productSlice.actions;
+export const { setSelectedProduct, clearError } = productSlice.actions;
 export default productSlice.reducer;
