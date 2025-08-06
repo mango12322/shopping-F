@@ -5,11 +5,12 @@ import CloudinaryUploadWidget from "../../../utils/CloudinaryUploadWidget";
 import { CATEGORY, STATUS, SIZE } from "../../../constants/product.constants";
 import "../style/adminProduct.style.css";
 import {
-  clearError,
   createProduct,
   editProduct,
+  clearError,
 } from "../../../features/product/productSlice";
 
+// ✅ 이 부분을 제가 빠뜨렸습니다. 여기에 추가해주세요.
 const InitialFormData = {
   name: "",
   sku: "",
@@ -22,74 +23,72 @@ const InitialFormData = {
 };
 
 const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
+  const dispatch = useDispatch();
   const { error, success, selectedProduct } = useSelector(
     (state) => state.product
   );
-  const [formData, setFormData] = useState(
-    mode === "new" ? { ...InitialFormData } : selectedProduct
-  );
+  const [formData, setFormData] = useState({ ...InitialFormData });
   const [stock, setStock] = useState([]);
-  const dispatch = useDispatch();
   const [stockError, setStockError] = useState(false);
 
+  // 생성/수정 성공 시 모달 닫기
   useEffect(() => {
-    if (success) setShowDialog(false);
+    if (success) {
+      setShowDialog(false);
+    }
   }, [success]);
 
+  // 모달이 열리거나 닫힐 때 상태 초기화
   useEffect(() => {
-    if (error || !success) {
-      dispatch(clearError());
-    }
     if (showDialog) {
-      if (mode === "edit") {
+      if (mode === "edit" && selectedProduct) {
         setFormData(selectedProduct);
-        const sizeArray = Object.keys(selectedProduct.stock).map((size) => [
-          size,
-          selectedProduct.stock[size],
-        ]);
-        setStock(sizeArray);
+        const stockArray = Object.entries(selectedProduct.stock);
+        setStock(stockArray);
       } else {
         setFormData({ ...InitialFormData });
         setStock([]);
       }
+    } else {
+      // 모달이 닫힐 때 form 데이터와 에러 초기화
+      dispatch(clearError());
     }
-  }, [showDialog]);
+  }, [showDialog, selectedProduct, mode, dispatch]);
 
   const handleClose = () => {
-    setFormData({ ...InitialFormData });
-    setStock([]);
-    setStockError(false);
-    dispatch(clearError());
     setShowDialog(false);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (stock.length === 0) return setStockError(true);
+    if (stock.length === 0) {
+      setStockError(true);
+      return;
+    }
     setStockError(false);
 
-    const totalStock = stock.reduce((total, item) => {
-      return { ...total, [item[0]]: parseInt(item[1]) };
-    }, {});
+    const totalStock = Object.fromEntries(
+      stock.map(([size, quantity]) => [size, parseInt(quantity)])
+    );
 
     if (mode === "new") {
       dispatch(createProduct({ ...formData, stock: totalStock }));
     } else {
-      // 상품 수정하기
+      dispatch(editProduct({ id: formData._id, ...formData, stock: totalStock }));
     }
   };
 
   const handleChange = (event) => {
-    setFormData({ ...formData, [event.target.id]: event.target.value });
+    const { id, value } = event.target;
+    setFormData({ ...formData, [id]: value });
   };
 
   const addStock = () => {
-    //재고타입 추가시 배열에 새 배열 추가
-    setStock([...stock, []]);
+    setStock([...stock, ["", ""]]);
   };
 
   const deleteStock = (idx) => {
-    const newStock = stock.filter((item, index) => index !== idx);
+    const newStock = stock.filter((_, index) => index !== idx);
     setStock(newStock);
   };
 
@@ -100,24 +99,19 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
   };
 
   const handleStockChange = (value, index) => {
-    //재고 수량 변환하기
+    const newStock = [...stock];
+    newStock[index][1] = value;
+    setStock(newStock);
   };
 
   const onHandleCategory = (event) => {
-    if (formData.category.includes(event.target.value)) {
-      const newCategory = formData.category.filter(
-        (item) => item !== event.target.value
-      );
-      setFormData({
-        ...formData,
-        category: [...newCategory],
-      });
-    } else {
-      setFormData({
-        ...formData,
-        category: [...formData.category, event.target.value],
-      });
-    }
+    const { value } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      category: prev.category.includes(value)
+        ? prev.category.filter((item) => item !== value)
+        : [...prev.category, value],
+    }));
   };
 
   const uploadImage = (url) => {
@@ -127,107 +121,16 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
   return (
     <Modal show={showDialog} onHide={handleClose}>
       <Modal.Header closeButton>
-        {mode === "new" ? (
-          <Modal.Title>Create New Product</Modal.Title>
-        ) : (
-          <Modal.Title>Edit Product</Modal.Title>
-        )}
+        <Modal.Title>{mode === "new" ? "Create New Product" : "Edit Product"}</Modal.Title>
       </Modal.Header>
-      {error && (
-        <div className="error-message">
-          <Alert variant="danger">{error}</Alert>
-        </div>
-      )}
-      <Form className="form-container" onSubmit={handleSubmit}>
-        <Row className="mb-3">{/* Sku, Name Form.Group ... */}</Row>
-        <Form.Group className="mb-3" controlId="description">
-          {/* Description Form.Group ... */}
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="stock">
-          <Form.Label className="mr-1">Stock</Form.Label>
-          {stockError && (
-            <span className="error-message">재고를 추가해주세요</span>
-          )}
-          <Button size="sm" onClick={addStock}>
-            Add +
-          </Button>
-          <div className="mt-2">
-            {stock.map((item, index) => (
-              <Row key={index}>
-                <Col sm={4}>
-                  <Form.Select
-                    onChange={(event) =>
-                      handleSizeChange(event.target.value, index)
-                    }
-                    required
-                    defaultValue={item[0] ? item[0].toLowerCase() : ""}
-                  >
-                    <option value="" disabled selected hidden>
-                      Please Choose...
-                    </option>
-                    {SIZE.map((item, index) => (
-                      <option
-                        inValid={true}
-                        value={item.toLowerCase()}
-                        disabled={stock.some(
-                          (size) => size[0] === item.toLowerCase()
-                        )}
-                        key={index}
-                      >
-                        {item}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
-                <Col sm={6}>
-                  <Form.Control
-                    onChange={(event) =>
-                      handleStockChange(event.target.value, index)
-                    }
-                    type="number"
-                    placeholder="number of stock"
-                    value={item[1]}
-                    required
-                  />
-                </Col>
-                <Col sm={2}>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => deleteStock(index)}
-                  >
-                    -
-                  </Button>
-                </Col>
-              </Row>
-            ))}
-          </div>
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="Image" required>
-          <Form.Label>Image</Form.Label>
-          <CloudinaryUploadWidget uploadImage={uploadImage} />
-          <img
-            id="uploadedimage"
-            src={formData.image}
-            className="upload-image mt-2"
-            alt="uploadedimage"
-          />
-        </Form.Group>
-        <Row className="mb-3">
-          {/* Price, Category, Status Form.Group ... */}
-        </Row>
-        {mode === "new" ? (
-          <Button variant="primary" type="submit">
-            Submit
-          </Button>
-        ) : (
-          <Button variant="primary" type="submit">
-            Edit
-          </Button>
-        )}
-      </Form>
-    </Modal>
-  );
-};
 
-export default NewItemDialog;
+      <Form className="form-container" onSubmit={handleSubmit}>
+        <Modal.Body>
+          {error && (
+            <Alert variant="danger" className="error-message">
+              {error}
+            </Alert>
+          )}
+
+          <Row className="mb-3">
+            <Form.Group as={Col} control

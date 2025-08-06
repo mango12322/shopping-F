@@ -55,7 +55,7 @@ const productSlice = createSlice({
     setSelectedProduct: (state, action) => {
       state.selectedProduct = action.payload;
     },
-    // 모달이 닫힐 때 에러/성공 상태 초기화
+
     clearError: (state) => {
       state.error = "";
       state.success = false;
@@ -63,7 +63,7 @@ const productSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // 상품 목록 가져오기
+
       .addCase(getProductList.pending, (state) => {
         state.loading = true;
       })
@@ -84,11 +84,11 @@ const productSlice = createSlice({
       })
       .addCase(createProduct.fulfilled, (state) => {
         state.loading = false;
-        state.success = true; // ✅ 4. 성공 시 success 상태 true로 변경
+        state.success = true;
       })
       .addCase(createProduct.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload; // ✅ 2. 에러 메시지 저장
+        state.error = action.payload;
         state.success = false;
       });
   },
